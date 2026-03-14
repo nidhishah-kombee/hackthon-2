@@ -8,7 +8,14 @@ until php -r "new PDO('mysql:host=db;port=3306;dbname=hackathon', 'admin', 'secr
 done
 
 echo "Database is up! Running migrations..."
-php artisan migrate:fresh --seed --force
+php artisan migrate --force
+
+# Seed only if users table is empty
+USER_COUNT=$(php artisan tinker --execute="echo \App\Models\User::count();" 2>/dev/null | tail -1)
+if [ "$USER_COUNT" = "0" ]; then
+    echo "Seeding database..."
+    php artisan db:seed --force
+fi
 
 echo "Starting application..."
 exec "$@"

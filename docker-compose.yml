@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    restart: always
     ports:
       - "8000:8000"
     environment:
@@ -12,6 +13,7 @@ services:
       - DB_DATABASE=hackathon
       - DB_USERNAME=admin
       - DB_PASSWORD=secret
+      - REDIS_HOST=redis
       - OTEL_PHP_AUTOLOAD_ENABLED=true
       - OTEL_TRACES_EXPORTER=otlp
       - OTEL_METRICS_EXPORTER=none
@@ -19,12 +21,16 @@ services:
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4318
       - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
       - OTEL_SERVICE_NAME=hackathon-app
+    volumes:
+      - ./storage/logs:/app/storage/logs
     depends_on:
       - db
+      - redis
       - tempo
 
   db:
     image: mysql:8.0
+    restart: always
     environment:
       MYSQL_DATABASE: hackathon
       MYSQL_USER: admin
@@ -35,13 +41,29 @@ services:
     volumes:
       - db-data:/var/lib/mysql
 
+  mysqld-exporter:
+    image: prom/mysqld-exporter:latest
+    restart: always
+    environment:
+      - DATA_SOURCE_NAME=admin:secret@(db:3306)/hackathon
+    ports:
+      - "9104:9104"
+    depends_on:
+      - db
+    command:
+      - "--mysqld.address=db:3306"
+      - "--mysqld.username=admin"
+      - "--web.listen-address=:9104"
+
   redis:
     image: redis:alpine
+    restart: always
     ports:
       - "6379:6379"
 
   prometheus:
     image: prom/prometheus:latest
+    restart: always
     ports:
       - "9090:9090"
     volumes:
@@ -53,6 +75,7 @@ services:
 
   loki:
     image: grafana/loki:2.9.10
+    restart: always
     ports:
       - "3100:3100"
     volumes:
@@ -61,6 +84,7 @@ services:
 
   promtail:
     image: grafana/promtail:latest
+    restart: always
     volumes:
       - ./storage/logs:/var/log/laravel
       - ./docker/promtail/promtail.yml:/etc/promtail/config.yml
@@ -70,16 +94,18 @@ services:
 
   tempo:
     image: grafana/tempo:2.2.0
+    restart: always
     command: [ "-config.file=/etc/tempo.yaml" ]
     volumes:
       - ./docker/tempo/tempo.yaml:/etc/tempo.yaml
     ports:
-      - "4317:4317" # OTLP gRPC
-      - "4318:4318" # OTLP HTTP
-      - "3201:3200" # Tempo /ready /metrics
+      - "4317:4317"
+      - "4318:4318"
+      - "3201:3200"
 
   grafana:
     image: grafana/grafana:latest
+    restart: always
     ports:
       - "3000:3000"
     environment:
@@ -95,6 +121,7 @@ services:
 
   phpmyadmin:
     image: phpmyadmin:latest
+    restart: always
     ports:
       - "8080:80"
     environment:

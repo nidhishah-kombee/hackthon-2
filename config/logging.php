@@ -64,6 +64,7 @@ return [
             'level' => env('LOG_LEVEL', 'debug'),
             'replace_placeholders' => true,
             'formatter' => \Monolog\Formatter\JsonFormatter::class,
+            'processors' => [\App\Logging\TraceIdProcessor::class],
         ],
 
         'daily' => [

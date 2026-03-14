@@ -7,6 +7,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -29,8 +30,14 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
-        $request->authenticate();
+        try {
+            $request->authenticate();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::warning('Login failed', ['email' => $request->email, 'ip' => $request->ip()]);
+            throw $e;
+        }
 
+        Log::info('User logged in', ['email' => $request->email, 'ip' => $request->ip()]);
         $request->session()->regenerate();
 
         return redirect()->intended(route('dashboard', absolute: false));

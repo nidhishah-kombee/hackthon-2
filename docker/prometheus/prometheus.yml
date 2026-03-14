@@ -13,3 +13,8 @@ scrape_configs:
   - job_name: 'laravel_app'
     static_configs:
       - targets: ['app:8000']
+    metrics_path: /metrics
+
+  - job_name: 'mysql'
+    static_configs:
+      - targets: ['mysqld-exporter:9104']
