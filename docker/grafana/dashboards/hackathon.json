@@ -145,7 +145,8 @@
             "uid": "prometheus"
           },
           "expr": "app_active_users_total",
-          "legendFormat": "Active Users"
+          "legendFormat": "Active Users",
+          "instant": true
         }
       ]
     },
@@ -209,7 +210,8 @@
             "uid": "prometheus"
           },
           "expr": "sum(app_http_errors_total)",
-          "legendFormat": "5xx"
+          "legendFormat": "5xx",
+          "instant": true
         }
       ]
     },

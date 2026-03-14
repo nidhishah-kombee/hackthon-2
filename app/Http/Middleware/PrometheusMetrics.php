@@ -41,21 +41,19 @@ class PrometheusMetrics
             );
             $histogram->observe($duration, [$method, $route]);
 
-            // Active authenticated users gauge (increment on login, decrement on logout)
-            if ($request->is('login') && $method === 'POST' && $status < 400) {
-                $gauge = $registry->getOrRegisterGauge(
-                    'app', 'active_users_total', 'Number of active authenticated users'
-                );
-                $gauge->inc();
+            // Active authenticated users gauge — count active sessions in DB (last 30 min)
+            try {
+                $activeCount = (int) \Illuminate\Support\Facades\DB::table('sessions')
+                    ->whereNotNull('user_id')
+                    ->where('last_activity', '>=', now()->subMinutes(30)->timestamp)
+                    ->count();
+            } catch (\Exception) {
+                $activeCount = 0;
             }
-            if ($request->is('logout') && $method === 'POST') {
-                try {
-                    $gauge = $registry->getOrRegisterGauge(
-                        'app', 'active_users_total', 'Number of active authenticated users'
-                    );
-                    $gauge->dec();
-                } catch (\Exception) {}
-            }
+            $gauge = $registry->getOrRegisterGauge(
+                'app', 'active_users_total', 'Number of active authenticated users'
+            );
+            $gauge->set($activeCount);
 
             // Error counter by route
             if ($status >= 500) {

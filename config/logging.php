@@ -55,7 +55,7 @@ return [
         'stack' => [
             'driver' => 'stack',
             'channels' => explode(',', env('LOG_STACK', 'single')),
-            'ignore_exceptions' => false,
+            'ignore_exceptions' => true,
         ],
 
         'single' => [
@@ -127,6 +127,17 @@ return [
 
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
+        ],
+
+        'loki' => [
+            'driver' => 'monolog',
+            'level' => env('LOG_LEVEL', 'debug'),
+            'handler' => \Monolog\Handler\StreamHandler::class,
+            'with' => [
+                'stream' => storage_path('logs/laravel.log'),
+            ],
+            'formatter' => \Monolog\Formatter\JsonFormatter::class,
+            'processors' => [\App\Logging\TraceIdProcessor::class],
         ],
 
     ],
