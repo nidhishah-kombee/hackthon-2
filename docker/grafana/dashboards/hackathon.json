@@ -1,0 +1,75 @@
+{
+  "title": "Hackathon Observability Overview",
+  "tags": ["laravel", "hackathon"],
+  "timezone": "browser",
+  "panels": [
+    {
+      "title": "Requests Per Minute",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(app_http_requests_total[1m])) * 60",
+          "legendFormat": "Requests/min"
+        }
+      ]
+    },
+    {
+      "title": "Error Rate %",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(app_http_requests_total{status=~\"5..\"}[1m])) / sum(rate(app_http_requests_total[1m])) * 100",
+          "legendFormat": "Error Rate %"
+        }
+      ]
+    },
+    {
+      "title": "Average Request Latency",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 0 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(app_http_request_duration_seconds_bucket[2m])) by (le))",
+          "legendFormat": "95th Percentile"
+        }
+      ]
+    },
+    {
+      "title": "Database Query Latency",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(app_db_query_duration_seconds_bucket[2m])) by (le))",
+          "legendFormat": "95th Percentile DB Query (s)"
+        }
+      ]
+    },
+    {
+      "title": "Database Queries Per Minute",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(app_db_query_duration_seconds_count[1m])) * 60",
+          "legendFormat": "Queries/min"
+        }
+      ]
+    },
+    {
+      "title": "Loki Application Logs",
+      "type": "logs",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 16 },
+      "targets": [
+        {
+          "expr": "{job=\"laravel\"} | json",
+          "datasource": "Loki"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 36,
+  "version": 1
+}

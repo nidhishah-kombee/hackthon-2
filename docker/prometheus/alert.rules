@@ -1,0 +1,21 @@
+groups:
+- name: laravel_alerts
+  interval: 5s
+  rules:
+  - alert: HighErrorRate
+    expr: sum(http_requests_total{status=~"5.."}) > 0
+    for: 0s
+    labels:
+      severity: critical
+    annotations:
+      summary: "High Error Rate on {{ $labels.instance }}"
+      description: "At least one 5xx error has been recorded."
+
+  - alert: HighLatency
+    expr: sum(http_request_duration_seconds_sum) / sum(http_request_duration_seconds_count) > 0.5
+    for: 0s
+    labels:
+      severity: warning
+    annotations:
+      summary: "High Latency on {{ $labels.instance }}"
+      description: "Average latency is greater than 0.5s."
