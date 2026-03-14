@@ -1,0 +1,297 @@
+{
+    "uid": "logs-dashboard",
+    "title": "C. Logs Dashboard",
+    "tags": [
+        "hackathon",
+        "logs"
+    ],
+    "timezone": "browser",
+    "refresh": "10s",
+    "time": {
+        "from": "now-1h",
+        "to": "now"
+    },
+    "templating": {
+        "list": [
+            {
+                "name": "traceId",
+                "label": "Trace ID",
+                "type": "textbox",
+                "current": {
+                    "value": ""
+                },
+                "hide": 0
+            }
+        ]
+    },
+    "panels": [
+        {
+            "id": 1,
+            "title": "Log Count by Severity",
+            "type": "timeseries",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 0
+            },
+            "datasource": {
+                "type": "loki",
+                "uid": "loki"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "short",
+                    "color": {
+                        "mode": "palette-classic"
+                    }
+                }
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "loki",
+                        "uid": "loki"
+                    },
+                    "expr": "sum(count_over_time({job=\"laravel\", level_name=\"ERROR\"}[1m]))",
+                    "legendFormat": "ERROR"
+                },
+                {
+                    "datasource": {
+                        "type": "loki",
+                        "uid": "loki"
+                    },
+                    "expr": "sum(count_over_time({job=\"laravel\", level_name=\"WARNING\"}[1m]))",
+                    "legendFormat": "WARNING"
+                },
+                {
+                    "datasource": {
+                        "type": "loki",
+                        "uid": "loki"
+                    },
+                    "expr": "sum(count_over_time({job=\"laravel\", level_name=\"INFO\"}[1m]))",
+                    "legendFormat": "INFO"
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "title": "Error Logs",
+            "type": "logs",
+            "gridPos": {
+                "h": 10,
+                "w": 12,
+                "x": 12,
+                "y": 0
+            },
+            "datasource": {
+                "type": "loki",
+                "uid": "loki"
+            },
+            "options": {
+                "showTime": true,
+                "showLabels": true,
+                "wrapLogMessage": true,
+                "sortOrder": "Descending"
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "loki",
+                        "uid": "loki"
+                    },
+                    "expr": "{job=\"laravel\", level_name=\"ERROR\"}",
+                    "legendFormat": ""
+                }
+            ]
+        },
+        {
+            "id": 3,
+            "title": "Login Failures",
+            "type": "logs",
+            "gridPos": {
+                "h": 10,
+                "w": 12,
+                "x": 0,
+                "y": 8
+            },
+            "datasource": {
+                "type": "loki",
+                "uid": "loki"
+            },
+            "options": {
+                "showTime": true,
+                "showLabels": false,
+                "wrapLogMessage": true,
+                "sortOrder": "Descending"
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "loki",
+                        "uid": "loki"
+                    },
+                    "expr": "{job=\"laravel\"} |= \"login\" |= \"fail\"",
+                    "legendFormat": ""
+                }
+            ]
+        },
+        {
+            "id": 4,
+            "title": "Validation Failures",
+            "type": "logs",
+            "gridPos": {
+                "h": 10,
+                "w": 12,
+                "x": 12,
+                "y": 10
+            },
+            "datasource": {
+                "type": "loki",
+                "uid": "loki"
+            },
+            "options": {
+                "showTime": true,
+                "showLabels": false,
+                "wrapLogMessage": true,
+                "sortOrder": "Descending"
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "loki",
+                        "uid": "loki"
+                    },
+                    "expr": "{job=\"laravel\"} |= \"validation\"",
+                    "legendFormat": ""
+                }
+            ]
+        },
+        {
+            "id": 5,
+            "title": "Filter Logs by Trace ID",
+            "type": "logs",
+            "gridPos": {
+                "h": 10,
+                "w": 24,
+                "x": 0,
+                "y": 20
+            },
+            "datasource": {
+                "type": "loki",
+                "uid": "loki"
+            },
+            "options": {
+                "showTime": true,
+                "showLabels": true,
+                "wrapLogMessage": true,
+                "sortOrder": "Descending"
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "loki",
+                        "uid": "loki"
+                    },
+                    "expr": "{job=\"laravel\"} |= \"$traceId\"",
+                    "legendFormat": ""
+                }
+            ]
+        },
+        {
+            "id": 6,
+            "title": "All Logs (recent)",
+            "type": "logs",
+            "gridPos": {
+                "h": 12,
+                "w": 24,
+                "x": 0,
+                "y": 30
+            },
+            "datasource": {
+                "type": "loki",
+                "uid": "loki"
+            },
+            "options": {
+                "showTime": true,
+                "showLabels": true,
+                "wrapLogMessage": true,
+                "sortOrder": "Descending",
+                "dedupStrategy": "none"
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "loki",
+                        "uid": "loki"
+                    },
+                    "expr": "{job=\"laravel\"}",
+                    "legendFormat": ""
+                }
+            ]
+        },
+        {
+            "id": 7,
+            "title": "Warning Logs",
+            "type": "logs",
+            "gridPos": {
+                "h": 10,
+                "w": 12,
+                "x": 0,
+                "y": 42
+            },
+            "datasource": {
+                "type": "loki",
+                "uid": "loki"
+            },
+            "options": {
+                "showTime": true,
+                "showLabels": false,
+                "wrapLogMessage": true,
+                "sortOrder": "Descending"
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "loki",
+                        "uid": "loki"
+                    },
+                    "expr": "{job=\"laravel\", level_name=\"WARNING\"}",
+                    "legendFormat": ""
+                }
+            ]
+        },
+        {
+            "id": 8,
+            "title": "Anomaly / Slow Endpoint Logs",
+            "type": "logs",
+            "gridPos": {
+                "h": 10,
+                "w": 12,
+                "x": 12,
+                "y": 42
+            },
+            "datasource": {
+                "type": "loki",
+                "uid": "loki"
+            },
+            "options": {
+                "showTime": true,
+                "showLabels": false,
+                "wrapLogMessage": true,
+                "sortOrder": "Descending"
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "loki",
+                        "uid": "loki"
+                    },
+                    "expr": "{job=\"laravel\"} |= \"anomaly\"",
+                    "legendFormat": ""
+                }
+            ]
+        }
+    ],
+    "schemaVersion": 36
+}

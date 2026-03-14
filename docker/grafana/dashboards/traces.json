@@ -1,0 +1,241 @@
+{
+    "uid": "traces-dashboard",
+    "title": "D. Traces — End-to-End Request",
+    "tags": [
+        "hackathon",
+        "traces"
+    ],
+    "timezone": "browser",
+    "refresh": "10s",
+    "time": {
+        "from": "now-1h",
+        "to": "now"
+    },
+    "panels": [
+        {
+            "id": 1,
+            "title": "Trace Explorer — Search by Service",
+            "type": "traces",
+            "gridPos": {
+                "h": 16,
+                "w": 24,
+                "x": 0,
+                "y": 0
+            },
+            "datasource": {
+                "type": "tempo",
+                "uid": "tempo"
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "tempo",
+                        "uid": "tempo"
+                    },
+                    "queryType": "traceqlSearch",
+                    "filters": [
+                        {
+                            "id": "service-name",
+                            "operator": "=",
+                            "scope": "resource",
+                            "tag": "service.name",
+                            "value": [
+                                "hackathon-app"
+                            ],
+                            "valueType": "string"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "title": "Span Duration by Route (p95)",
+            "type": "timeseries",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 16
+            },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "s",
+                    "color": {
+                        "mode": "palette-classic"
+                    }
+                }
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "prometheus"
+                    },
+                    "expr": "histogram_quantile(0.95, sum(rate(app_http_request_duration_seconds_bucket{route!~\"api/anomaly.*|sanctum/csrf-cookie|unknown|metrics\"}[1m])) by (le, route))",
+                    "legendFormat": "p95 {{route}}"
+                }
+            ]
+        },
+        {
+            "id": 3,
+            "title": "DB vs App Latency (bottleneck view)",
+            "type": "timeseries",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 16
+            },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "s",
+                    "color": {
+                        "mode": "palette-classic"
+                    }
+                }
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "prometheus"
+                    },
+                    "expr": "histogram_quantile(0.95, sum(rate(app_http_request_duration_seconds_bucket[1m])) by (le))",
+                    "legendFormat": "p95 HTTP total"
+                },
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "prometheus"
+                    },
+                    "expr": "histogram_quantile(0.95, rate(app_db_query_duration_seconds_bucket[1m]))",
+                    "legendFormat": "p95 DB query"
+                },
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "prometheus"
+                    },
+                    "expr": "histogram_quantile(0.95, sum(rate(app_http_request_duration_seconds_bucket[1m])) by (le)) - histogram_quantile(0.95, rate(app_db_query_duration_seconds_bucket[1m]))",
+                    "legendFormat": "p95 App logic (HTTP - DB)"
+                }
+            ]
+        },
+        {
+            "id": 4,
+            "title": "Slowest Routes (avg)",
+            "type": "bargauge",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 24
+            },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "s",
+                    "color": {
+                        "mode": "continuous-RdYlGr"
+                    }
+                }
+            },
+            "options": {
+                "orientation": "horizontal",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                }
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "prometheus"
+                    },
+                    "expr": "sort_desc(sum(rate(app_http_request_duration_seconds_sum{route!~\"api/anomaly.*|sanctum/csrf-cookie|unknown|metrics\"}[5m])) by (route) / sum(rate(app_http_request_duration_seconds_count{route!~\"api/anomaly.*|sanctum/csrf-cookie|unknown|metrics\"}[5m])) by (route))",
+                    "legendFormat": "{{route}}",
+                    "instant": true
+                }
+            ]
+        },
+        {
+            "id": 5,
+            "title": "Trace Logs (with traceId)",
+            "type": "logs",
+            "gridPos": {
+                "h": 10,
+                "w": 12,
+                "x": 12,
+                "y": 24
+            },
+            "datasource": {
+                "type": "loki",
+                "uid": "loki"
+            },
+            "options": {
+                "showTime": true,
+                "showLabels": true,
+                "wrapLogMessage": true,
+                "sortOrder": "Descending"
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "loki",
+                        "uid": "loki"
+                    },
+                    "expr": "{job=\"laravel\"} | json | traceId != \"\"",
+                    "legendFormat": ""
+                }
+            ]
+        },
+        {
+            "id": 6,
+            "title": "Request Rate Under Load",
+            "type": "timeseries",
+            "gridPos": {
+                "h": 8,
+                "w": 24,
+                "x": 0,
+                "y": 34
+            },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "reqps",
+                    "color": {
+                        "mode": "palette-classic"
+                    }
+                }
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "prometheus"
+                    },
+                    "expr": "sum(rate(app_http_requests_total[30s])) by (route)",
+                    "legendFormat": "{{route}}"
+                }
+            ]
+        }
+    ],
+    "schemaVersion": 36
+}

@@ -44,16 +44,15 @@ services:
   mysqld-exporter:
     image: prom/mysqld-exporter:latest
     restart: always
-    environment:
-      - DATA_SOURCE_NAME=admin:secret@(db:3306)/hackathon
     ports:
       - "9104:9104"
+    volumes:
+      - ./docker/mysqld-exporter/.my.cnf:/etc/.my.cnf:ro
+    command:
+      - "--config.my-cnf=/etc/.my.cnf"
+      - "--web.listen-address=:9104"
     depends_on:
       - db
-    command:
-      - "--mysqld.address=db:3306"
-      - "--mysqld.username=admin"
-      - "--web.listen-address=:9104"
 
   redis:
     image: redis:alpine
